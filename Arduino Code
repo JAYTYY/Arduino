@@ -1,0 +1,53 @@
+#include "thingProperties.h"  
+int moisturePin = A2;  
+/* Set this threeshold accordingly to the resistance you used */  
+/* The easiest way to calibrate this value is to test the sensor in both dry and wet earth */  
+int threshold = 800;  
+void setup() {  
+ /* Initialize serial and wait for port to open: */  
+ Serial.begin(9600);  
+ /* This delay gives the chance to wait for a Serial Monitor without blocking if none   is found */  
+ delay(1500);  
+ /* Defined in thingProperties.h */  
+ initProperties();  
+ /* Connect to Arduino IoT Cloud */  
+ ArduinoCloud.begin(ArduinoIoTPreferredConnection);  
+ /*  
+ The following function allows you to obtain more information  
+ related to the state of network and IoT Cloud connection and errors  
+ the higher number the more granular information you’ll get.  
+ The default is 0 (only errors).  
+ Maximum is 4  
+ */  
+ setDebugMessageLevel(2);  
+ ArduinoCloud.printDebugInfo();  
+}  
+void loop() {  
+ ArduinoCloud.update();  
+ moisture = get_average_moisture();  
+ Serial.print("moisture ");  
+ Serial.println(moisture);  
+ /* assign the message variable based on water levels */  
+ if (moisture > threshold) {  
+ message = "Warning your plant needs water!"; /* Insert here your emergency message */  
+ } else {  
+ message = "Your plant has enough water!";  
+ }  
+ Serial.println(message);  
+}  
+int get_average_moisture() {  
+ int tempValue = 0; /* variable to temporarily store moisture value */  
+ /* make an average of 10 values to be more accurate */  
+ for (int a = 0; a < 10; a++) {  
+ tempValue += analogRead(moisturePin);  
+ delay(100);  
+ }  
+ return tempValue / 10;  
+}  
+/*  
+Since Message is READ_WRITE variable, onMessageChange() is  
+executed every time a new value is received from IoT Cloud.  
+*/  
+void onMessageChange()  {  
+ /* Add your code here to act upon Message change */  
+}
